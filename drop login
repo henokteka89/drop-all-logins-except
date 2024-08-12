@@ -1,0 +1,25 @@
+DECLARE @LoginName NVARCHAR(128);
+DECLARE @SQL NVARCHAR(MAX);
+
+DECLARE LoginCursor CURSOR FOR
+SELECT name 
+FROM sys.server_principals
+WHERE type_desc IN ('SQL_LOGIN', 'WINDOWS_LOGIN', 'CERTIFICATE_MAPPED_LOGIN', 'ASYMMETRIC_KEY_MAPPED_LOGIN')
+AND name NOT IN ('sa', 'YourLoginName', 'domain\sqldba', '##MS_SQLResourceSigningCertificate##', '##MS_SQLReplicationSigningCertificate##');  -- Add more logins to exclude as needed
+
+OPEN LoginCursor;
+FETCH NEXT FROM LoginCursor INTO @LoginName;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    -- Generate the DROP LOGIN command
+    SET @SQL = 'DROP LOGIN [' + @LoginName + '];';
+    
+    -- Print the DROP LOGIN command
+    PRINT @SQL;
+
+    FETCH NEXT FROM LoginCursor INTO @LoginName;
+END;
+
+CLOSE LoginCursor;
+DEALLOCATE LoginCursor;
